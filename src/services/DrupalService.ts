@@ -1,20 +1,23 @@
 import { fetchAllRecipes } from "@/API/recipes";
 import { Recipe, PaginationState } from "@/types/types";
+import { NextDrupal } from "next-drupal"
+
+const drupal = new NextDrupal("https://recipes.ddev.site/")
 
 // Transform Drupal data to Recipe type
 function drupalNodeToRecipe(node: any): Recipe {
   return {
     id: node.id,
-    title: node.attributes.title,
-    summary: node.attributes.field_summary.value || "",
+    title: node.title,
+    summary: node.field_summary.value || "",
     image: 'https://recipes.ddev.site' + node.field_recipe_image.field_media_image.uri.url || "/placeholder.svg",
-    cookingTime: node.attributes.field_cooking_time || 0,
-    difficulty: node.attributes.field_difficulty || "Easy",
-    ingredients: node.attributes.field_ingredients || [],
-    instructions: node.attributes.field_instructions.value || [], // NEEDS TO BE FIXED
-    category: node.attributes.field_recipe_category || "",
-    featured: node.attributes.field_featured || false,
-    path: node.attributes.path.alias || "",
+    cookingTime: node.field_cooking_time || 0,
+    difficulty: node.field_difficulty || "Easy",
+    ingredients: node.field_ingredients || [],
+    instructions: node.field_instructions.value || [], // NEEDS TO BE FIXED
+    category: node.field_recipe_category || "",
+    featured: node.field_featured || false,
+    path: node.path.alias || "",
   };
 }
 
@@ -28,20 +31,20 @@ export const drupalService = {
     pageSize = 9
   ): Promise<{ recipes: Recipe[]; pagination: PaginationState }> => {
     try {
-      // const response: Recipe[] = await drupal.getResourceCollection('node--recipe', {
-      //   params: {
-      //     include: "field_recipe_image.field_media_image",
-      //     "fields[media--image]": "field_media_image",
-      //     "fields[file--file]": "uri",
-      //     "page[limit]": pageSize,
-      //     "page[offset]": (page - 1) * pageSize,
-      //     sort: "-created"
-      //   }
-      // })
-      const response = await fetchAllRecipes(page, pageSize);
+      const response: Recipe[] = await drupal.getResourceCollection('node--recipe', {
+        params: {
+          include: "field_recipe_image.field_media_image",
+          "fields[media--image]": "field_media_image",
+          "fields[file--file]": "uri",
+          "page[limit]": pageSize,
+          "page[offset]": (page - 1) * pageSize,
+          sort: "-created"
+        }
+      })
+      // const response = await fetchAllRecipes(page, pageSize); // custom fetch function
     
-      console.log("🚀 ~ recipes:", response.data)
-      const recipes = response.data.map((node: any) => drupalNodeToRecipe(node))
+      console.log("🚀 ~ recipes:", response)
+      const recipes = response.map((node: any) => drupalNodeToRecipe(node))
 
       return {
         recipes: recipes,

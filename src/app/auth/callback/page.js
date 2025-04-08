@@ -1,3 +1,4 @@
+// auth/callback/page file
 'use client';
 
 import { useEffect, useState } from 'react';
